@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Folder Creation</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Folder Creation</h1>
+
+    <!-- Button to trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createFolderModal">
+        Create Folder
+    </button>
+
+    <!-- Modal for Folder Creation Form -->
+    <div class="modal fade" id="createFolderModal" tabindex="-1" role="dialog" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createFolderModalLabel">Create Folder</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createFolderForm">
+                        <div class="form-group">
+                            <label for="folderName">Folder Name</label>
+                            <input type="text" class="form-control" id="folderName" name="folderName" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Showing Messages -->
+    <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalLabel">Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="messageContent">
+                    <!-- Message content will be dynamically inserted here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="viewChartsButton" style="display:none;" onclick="window.location.href='/showChart'">View Charts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('createFolderForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const folderName = document.getElementById('folderName').value;
+
+        try {
+            // Prompt the user to select a directory
+            const dirHandle = await window.showDirectoryPicker();
+
+            // Check if the folder already exists
+            let folderExists = false;
+            for await (const entry of dirHandle.values()) {
+                if (entry.kind === 'directory' && entry.name === folderName) {
+                    folderExists = true;
+                    break;
+                }
+            }
+
+            if (!folderExists) {
+                // Create the new directory
+                await dirHandle.getDirectoryHandle(folderName, { create: true });
+                document.getElementById('messageContent').textContent = "Folder created successfully.";
+                document.getElementById('viewChartsButton').style.display = 'block';
+
+                // Optionally, notify the server about the new folder
+                fetch('/notify-folder-creation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ folderName })
+                }).then(response => {
+                    if (!response.ok) {
+                        console.error('Server notification failed.');
+                    }
+                });
+            } else {
+                document.getElementById('messageContent').textContent = "Folder already exists.";
+                document.getElementById('viewChartsButton').style.display = 'none';
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('messageContent').textContent = "Failed to create folder.";
+            document.getElementById('viewChartsButton').style.display = 'none';
+        }
+
+        $('#messageModal').modal('show');
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

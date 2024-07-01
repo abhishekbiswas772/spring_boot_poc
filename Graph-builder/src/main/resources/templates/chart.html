@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Charts</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .chart-image {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .dropdown {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="my-4">Simulation Generated Graphs</h1>
+
+    <div class="dropdown mb-4">
+        <label for="chart-select" class="form-label">Select a Chart:</label>
+        <select id="chart-select" class="form-control">
+            <option value="">--Select a Chart--</option>
+            <div th:each="graphChartModel : ${chartModels}">
+                <option th:value="${graphChartModel.nameOfGraph}" th:text="${graphChartModel.nameOfGraph}"></option>
+            </div>
+        </select>
+    </div>
+
+    <div th:each="graphChartModel : ${chartModels}" th:attr="data-chart-name=${graphChartModel.nameOfGraph}" class="chart-container">
+        <div class="chart-title" th:text="${graphChartModel.nameOfGraph}"></div>
+        <img th:src="'data:image/png;base64,' + ${graphChartModel.base64GraphImg}" alt="Generated Chart" class="chart-image img-fluid"/>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    document.getElementById('chart-select').addEventListener('change', function() {
+        let selectedChart = this.value;
+        let charts = document.querySelectorAll('.chart-container');
+        charts.forEach(chart => {
+            if (chart.getAttribute('data-chart-name') === selectedChart) {
+                chart.style.display = 'block';
+            } else {
+                chart.style.display = 'none';
+            }
+        });
+    });
+</script>
+</body>
+</html>
